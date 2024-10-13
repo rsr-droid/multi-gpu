@@ -5,7 +5,7 @@
 
 ```
 python -m venv multigpu
-source trelisEnv/bin/activate
+source multigpu/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install flash-attn --no-build-isolation
