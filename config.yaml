@@ -1,0 +1,95 @@
+# *** GPU Setup ***
+# device_map: FSDP # Set to 'auto' for pipeline parallel (slowest). Set to DDP for Distributed Data Parallel. Set to 'FSDP' for FSDP.
+# device_map: auto
+device_map: DDP
+
+# *** Model and tokenizer configuration. ***
+model_slug: meta-llama/Meta-Llama-3.1-8B
+# model_slug: Trelis/80M-0.0090-cosmopedia
+# model_slug: Trelis/80M-0.0090-cosmopedia-SFT-dpo-mix-7k-SHORT-local
+# model_slug: Trelis/TinyLlama-1.1B-intermediate-step-1431k-3T-SFT-function_calling_v3-fsdp-sft-completions-func-adapters-local
+# model_slug: Qwen/Qwen1.5-0.5B-Chat
+# model_slug: apple/OpenELM-450M-instruct
+
+## Tokenizer setup
+tokenizer_slug: HuggingFaceTB/SmolLM-360M-Instruct # Tokenizer identifier on Hugging Face or local path, defaults to model_slug if commented out or set to null
+padding_side: left # usually set to left.
+# eos_token: "</s>" # this can be forced as the eos token, set in the tokenizer AND the model. For example, useful for 
+# chat_template: "data/chat_templates/mistral.jinja" # Optionally specify a chat template, see the data/chat_template folder for examples
+4bit: false # Enable or disable 4bit quantization. THIS IS NOT SUPPORTED FOR FSDP ON MULTIPLE GPUs!
+flash_attention_2: true # Enable or disable Flash Attention 2. Set to null if using FSDP.
+dtype: bfloat16 # Data type for the model, defaults to bfloat16. Use float16 for non-Ampere GPUs (e.g. T4).
+
+## *** `test.py` configuration ***
+test_save_tag: null # Optionally add a tag to the end of the saved file
+test_file: data/messages.json # Path to the test file, defaults to data/messages.json .
+# test_file: data/function_messages.json # Path to the test file, defaults to data/messages.json .
+use_dataset_to_test: false # Set `true` to use the dataset specified below rather than the test_file for `test.py`
+
+## *** Dataset configuration ***
+dataset: 'Trelis/dpo-mix-7k-SHORT'
+# dataset: 'argilla/dpo-mix-7k' # HuggingFace Repo slug (or path to datast on local)
+# dataset: 'Trelis/orpo-dpo-mix-40k-SHORT' # HuggingFace Repo slug (or path to datast on local)
+# dataset: 'Trelis/function_calling_v3_SAMPLE' or Trelis/function_calling_v3 if you have purchased access
+# dataset_branch: 'messages'
+
+# * Test Dataset (for test evaluation separate to evaluation during training) *
+dataset_test_split: 'test' # Set the split to use for testing.
+dataset_test_column_name: 'chosen' # The name of the column with the conversations (formatted as an array of messages with both 'role' and 'content').
+dataset_test_max_rows: 3 # Max number of rows to use when running test.py . Set to null to run all. Comment out to set to one.
+
+# * Train *
+dataset_train_split: 'train' # Set the split to use for training.
+dataset_messages_column_name: 'chosen' # The name of the column with the conversations (formatted as an array of messages with both 'role' and 'content').
+dataset_train_max_rows: null # Max number of rows to use when running test.py . Set to null to run all.
+
+# * Validation *
+generate_val_split: false # if true, this will take 20% of the training dataset for validation.
+dataset_validation_split: 'test' # Set the split to use for training. Confusingly, some datasets may require you to use a test split.
+dataset_validation_max_rows: null # Max number of rows to use when running test.py . Set to null to run all.
+
+## *** LoRA configuration ***
+use_lora: false
+lora_modules: ["o_proj","q_proj","k_proj","v_proj","up_proj","down_proj","gate_proj"]
+# other_trainable: ["embed_tokens",“input_layernorm”,”norm”,”post_attention_layernorm”]
+lora_r: 32
+lora_alpha: 32
+use_rslora: true
+
+## *** Training configuration ***
+report_to: wandb # or wandb/tensorboard
+# wandb_project_name: test-proj # if using wandb
+new_model_tag: null # Optionally add a tag to the new model name (which defaults to base_model_name + SFT/ORPO + dataset_name + tag)
+hf_username: Trelis # The username or organisation to which to push models on HuggingFace
+# max_steps: 1 # comment this in to run a short number of training steps.
+completions_only: false # set this to true for structured generation, and set the response_template
+# response_template: '<|assistant|>' # for phi-3 chat templates
+response_template: ' [/INST]' # for Mistral / Llama 2 chat templates
+training_batch_size: 16 # Adjusting this will affect VRAM requirements.
+validation_batch_size: 16 # Adjusting this will affect VRAM requirements.
+gradient_accumulation_steps: 1
+do_eval: true # Set to true for using a validation dataset
+num_epochs: 1
+learning_rate: 1e-3 # 2e-4 for 270M models, 1.5e-4 for 450M models. 5e-5 for 1B models. 1e-5 for 7B models.
+training_output_dir: '/workspace/multi-gpu/training_output' #should be an absolute path. This is correct for Runpod.
+bf16: true # unless using a T4, non-ampere gpu
+lr_scheduler_type: "constant" #or use cosine if training over a large amount of data
+save_steps: 0 # Checkpoints will be saved at each increment of this number of steps. 0.5 means saving each 50% of total steps. 0 means no saving of checkpoints. Note that the script will save the final model.
+max_seq_length: 2048 # Adjusting this will affect VRAM requirements.
+gradient_checkpointing: true # Turn on gradient checkpointing. Reduces VRAM requirements at the cost of a little speed.
+use_reentrant: true # Reduces memory when gradient_checkpointing is on. Cannot be used with QLoRA on multiple devices. Should be used otherwise.
+
+# # * ORPO (Preference fine-tuning) *
+# use_orpo: false
+# chosen_column_name: chosen # name of the dataset column with the chosen messages
+# rejected_column_name: rejected # name of the dataset column with the rejected messages
+# max_prompt_length: 512 # in conjection with max_seq_length, this fully specifies the max prompt and completion lengths
+# beta: 0.2 #how much to weigh the preferred-to-rejected odds versus cross-entropy loss.
+
+## ** Push to Hub Settings **
+local_path_to_model_to_push: Trelis/distilled-local # REQUIRED. path to model or adapters to push
+target_hf_repo: Trelis/distilled-testpush # Set the target repo. If set to null, the repo will be set using the hf_username and the last part of the local_path
+
+# * Merging *
+merge_before_push: true # Set false if you wish to push model adapters rather than the merged model.
+base_model: TinyLlama/distilled # REQUIRED. HuggingFace model slug (owner/model_name)
