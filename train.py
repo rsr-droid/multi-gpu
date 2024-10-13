@@ -1,3 +1,5 @@
+# Run this with FSDP with "accelerate launch train.py" after having run "accelerate config"
+# YOU MUST RUN "accelerate config" before running this script. See the README.md for options to select.
 import os
 import yaml
 import torch
