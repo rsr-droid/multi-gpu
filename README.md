@@ -4,8 +4,8 @@
 2. Set up a virtual environment and run the installs:
 
 ```
-python -m venv multigpu
-source multigpu/bin/activate
+python -m venv multigpuenv
+source multigpuenv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install flash-attn --no-build-isolation
