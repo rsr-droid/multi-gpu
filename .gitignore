@@ -1,1 +1,5 @@
 multigpuvenv/
+models--*
+.locks
+wandb
+results
