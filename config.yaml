@@ -5,9 +5,6 @@ device_map: DDP
 
 # *** Model and tokenizer configuration. ***
 model_slug: meta-llama/Meta-Llama-3.1-8B
-# model_slug: Trelis/80M-0.0090-cosmopedia
-# model_slug: Trelis/80M-0.0090-cosmopedia-SFT-dpo-mix-7k-SHORT-local
-# model_slug: Trelis/TinyLlama-1.1B-intermediate-step-1431k-3T-SFT-function_calling_v3-fsdp-sft-completions-func-adapters-local
 # model_slug: Qwen/Qwen1.5-0.5B-Chat
 # model_slug: apple/OpenELM-450M-instruct
 
@@ -27,8 +24,9 @@ test_file: data/messages.json # Path to the test file, defaults to data/messages
 use_dataset_to_test: false # Set `true` to use the dataset specified below rather than the test_file for `test.py`
 
 ## *** Dataset configuration ***
-dataset: 'Trelis/dpo-mix-7k-SHORT'
-# dataset: 'argilla/dpo-mix-7k' # HuggingFace Repo slug (or path to datast on local)
+# dataset: 'Trelis/dpo-mix-7k-SHORT'
+dataset: 'argilla/dpo-mix-7k' # HuggingFace Repo slug (or path to datast on local)
+# dataset: 'philschmid/dolly-15k-oai-style' # HuggingFace Repo slug (or path to datast on local)
 # dataset: 'Trelis/orpo-dpo-mix-40k-SHORT' # HuggingFace Repo slug (or path to datast on local)
 # dataset: 'Trelis/function_calling_v3_SAMPLE' or Trelis/function_calling_v3 if you have purchased access
 # dataset_branch: 'messages'
@@ -87,9 +85,9 @@ use_reentrant: true # Reduces memory when gradient_checkpointing is on. Cannot b
 # beta: 0.2 #how much to weigh the preferred-to-rejected odds versus cross-entropy loss.
 
 ## ** Push to Hub Settings **
-local_path_to_model_to_push: Trelis/distilled-local # REQUIRED. path to model or adapters to push
-target_hf_repo: Trelis/distilled-testpush # Set the target repo. If set to null, the repo will be set using the hf_username and the last part of the local_path
+local_path_to_model_to_push: rsrdroid/llama-3.1-8B-local # REQUIRED. path to model or adapters to push
+target_hf_repo: rsrdroid/llama-3.1-8B-testpush # Set the target repo. If set to null, the repo will be set using the hf_username and the last part of the local_path
 
 # * Merging *
 merge_before_push: true # Set false if you wish to push model adapters rather than the merged model.
-base_model: TinyLlama/distilled # REQUIRED. HuggingFace model slug (owner/model_name)
+base_model: meta-llama/Meta-Llama-3.1-8B # REQUIRED. HuggingFace model slug (owner/model_name)
