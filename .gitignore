@@ -4,3 +4,9 @@ models--*
 wandb
 results
 train_orpo.py
+checkpoint*/
+models*/
+wandb/
+.env
+.ipynb_checkpoints/
+.DS_Store
